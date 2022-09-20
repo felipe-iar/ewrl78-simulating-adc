@@ -1,0 +1,60 @@
+/**
+ * @file RL78-ADC.mac
+ * @author Felipe Torrezan
+ * @date 2019-08-17
+ * @brief Macros for simulating an RL78 ADC using the C-SPY debugger
+ *
+ * @license See LICENSE for detailed license information
+ *
+ * For C-SPY Macros documentation refer to
+ * https://netstorage.iar.com/SuppDB/Public/UPDINFO/015020/arm/doc/EWARM_DebuggingGuide.ENU.pdf#page=413 (EWARM 8.50.9)
+ */
+
+__var _dataFileHandle;  // Handle for a file containing the ADC data for simulation
+__var _interruptHandle; // Handle for the ADC simulated interrupt
+__var _breakADCR;       // Handle for the ADCR breakpoint
+
+execUserSetup() {
+  if ( __driverType("sim") ) {
+    __message "-- C-SPY::execUserSetup(): setting simulation environment.";
+    _dataFileHandle = __openFile( "$PROJ_DIR$/ADCdata.txt", "r" );
+    if ( !_dataFileHandle ) {
+      __message "-- C-SPY::simSetup(): could not open file";
+    }
+    /*
+    _interruptHandle = __orderInterrupt("INTAD", 6000, 2000, 0, 1, 0, 100);
+    if ( -1 == _interruptHandle ) {
+      __message "-- C-SPY::simSetup(): failed to set up the interrupt";
+    }
+    /* Call the readADCR macro whenever the ADCR register is read */
+    _breakADCR = __setSimBreak("ADCR", "R", "readADCR()");
+  } else {
+    execUserExit();
+  }
+}
+
+readADCR() {
+  __var _adValue;
+  if ( !__readFile(_dataFileHandle, &_adValue) ) {
+    ADCR = _adValue;
+    __message "-- C-SPY::readADCR(): ADCR = 0x", _adValue:%X,"\n";
+  } else {
+    __message "-- C-SPY::readADCR(): error reading value from data file.";
+  }
+}
+
+execUserReset() {
+  if ( __driverType("sim") ) {
+    PC = &__iar_program_start;
+    if ( _ADCfileHandle ) {
+      __resetFile( _ADCfileHandle );
+    }
+  }
+  __message "execUserReset() called\n";
+}
+
+execUserExit() {
+  __cancelInterrupt(_interruptHandle);
+  __clearBreak(_breakADCR);
+  __closeFile(_dataFileHandle);
+}
