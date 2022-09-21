@@ -21,7 +21,6 @@ execUserSetup() {
     if ( !_dataFileHandle ) {
       __message "-- C-SPY::simSetup(): could not open file";
     }
-    /*
     _interruptHandle = __orderInterrupt("INTAD", 6000, 2000, 0, 1, 0, 100);
     if ( -1 == _interruptHandle ) {
       __message "-- C-SPY::simSetup(): failed to set up the interrupt";
@@ -45,9 +44,8 @@ readADCR() {
 
 execUserReset() {
   if ( __driverType("sim") ) {
-    PC = &__iar_program_start;
-    if ( _ADCfileHandle ) {
-      __resetFile( _ADCfileHandle );
+    if ( _dataFileHandle ) {
+      __resetFile( _dataFileHandle );
     }
   }
   __message "execUserReset() called\n";
